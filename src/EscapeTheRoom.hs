@@ -90,7 +90,6 @@ module EscapeTheRoom where
     canMove Wall = False
     canMove Floor = True
     canMove (Door _) = False
- --   canMove (Door _ Opened) = True
     canMove Exit = True
     canMove (Button _) = True
 
@@ -161,36 +160,10 @@ module EscapeTheRoom where
                 getNewMap doorCoord checkCoord
                     | eqCoords doorCoord checkCoord = Floor
                     | otherwise = f checkCoord
---                invertState :: Tile -> Tile
---                invertState (Door color Opened) = Door color Closed
---                invertState (Door color Closed) = Door color Opened
---                invertState t = t
-            
-    handleWorld :: Event -> Level -> Level
-    handleWorld (KeyPress key) l = checkF (tryMove (stringToDir (unpack key)) l)
-        where
-            checkF (Level c f)
-                | isButton (f c) = Level c (openDoors4 (getColors (f c)) f)
-                | isExit (f c) = Level (Coords 100 100) f
-                | otherwise = Level c f
-                where
-                    isButton :: Tile -> Bool
-                    isButton (Button _) = True
-                    isButton _ = False
-                    isExit :: Tile -> Bool
-                    isExit Exit = True
-                    isExit _ = False
-                    getColors :: Tile -> [DoorColor]
-                    getColors (Button c') = [c']
-                    getColors _ = []
-    handleWorld _ l = l
 
     data Status = Prepare | Play | Win
 
     data State = State [Level] Status [(Coords, DoorColor)]
-
- --   initLevelMap :: Level -> State
- --   initLevelMap l = State l Prepare
 
     isLevelComplete :: State -> Bool
     isLevelComplete (State (l:_) _ _) 
@@ -211,25 +184,30 @@ module EscapeTheRoom where
             updateWorld5 :: Double -> State -> State
             updateWorld5 _ w = w
             handleWorld5 :: Event -> State -> State
-            handleWorld5 (KeyPress key) (State (l:ls) s ds) = State (newLvl:ls) s ds
+            handleWorld5 (KeyPress _) (State ls Prepare ds) = State ls Play ds
+            handleWorld5 (KeyPress _) (State (l:[]) Win ds) = State [l] Win ds
+            handleWorld5 (KeyPress _) (State (_:ls) Win ds) = State ls Prepare ds
+            handleWorld5 (KeyPress key) (State (l:ls) Play ds) = newS
                 where
+                    isExit :: Tile -> Bool
+                    isExit Exit = True
+                    isExit _ = False
                     checkF (Level c f)
-                        | isButton (f c) = Level c (openDoors4 (getColors (f c)) f)
-                        | isExit (f c) = Level (Coords 100 100) f
-                        | otherwise = Level c f
+                        | isButton (f c) = State ((Level c (openDoors4 (getColors (f c)) f)):ls) Play ds
+                        | isExit (f c) = State (l:ls) Win []--Level (Coords 100 100) f
+                        | otherwise = State ((Level c f):ls) Play ds 
                         where
                             isButton :: Tile -> Bool
                             isButton (Button _) = True
                             isButton _ = False
-                            isExit :: Tile -> Bool
-                            isExit Exit = True
-                            isExit _ = False
                             getColors :: Tile -> [DoorColor]
                             getColors (Button c') = [c']
                             getColors _ = []
-                    newLvl = checkF (tryMove (stringToDir (unpack key)) l)
+                    newS = checkF (tryMove (stringToDir (unpack key)) l)
             handleWorld5 _ s = s
             drawWorld5 :: State -> Picture
+            drawWorld5 (State _ Prepare _) = lettering "Loading... Press any btn to continue"
+            drawWorld5 (State _ Win _) = lettering "Level completed! Press any btn to continue"
             drawWorld5 (State ((Level c f):_) _ _) = scaled (0.75) (0.75) (
                 translated x y (drawPlayerAt c <> drawLevelMap f))
                 where

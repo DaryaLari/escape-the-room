@@ -33,11 +33,11 @@ module EscapeTheRoom.Levels where
     levels :: [Level]
     levels =
       [ -- level1     -- Author: Kamilla Borodina
-        level2       -- Author: Alina Chasova
-      , level3       -- Author: Nikolay Gaivoronskiy
+--        level2       -- Author: Alina Chasova
+--      , level3       -- Author: Nikolay Gaivoronskiy
       -- , level4       -- Author: Kamill Gusmanov
-      , level5       -- Author: Alik Khilazhev
-      , level6       -- Author: Darya Larionova
+--      , level5       -- Author: Alik Khilazhev
+       level6       -- Author: Darya Larionova
       , level7       -- Author: Elena Lebedeva
       , level8       -- Author: Azat Sultanov
       , level9       -- Author: Ruslan Tushov
