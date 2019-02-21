@@ -1,22 +1,25 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE UnicodeSyntax #-}
 {-# OPTIONS_GHC -Wall #-}
 
 module EscapeTheRoom where
     import CodeWorld
     import Data.Text
+    import EscapeTheRoom.Levels
 
     data DoorState = Opened | Closed
-    data DoorColor = Red | Blue | Green
-    data Tile = Wall | Floor | Door DoorColor DoorState | Exit | Button DoorColor
-    data Coords = Coords Integer Integer
+ --   data DoorColor = Red | Blue | Green
+ --   data Tile = Wall | Floor | Door DoorColor DoorState | Exit | Button DoorColor
+--    data Coords = Coords Integer Integer
     
     doorColor :: DoorColor -> Color
-    doorColor Main.Red = red
-    doorColor Main.Blue = blue
-    doorColor Main.Green = green
+    doorColor CRed = red
+    doorColor CBlue = blue
+    doorColor CGreen = green
+    doorColor _ = white
 
     drawPlayerAt :: Coords -> Picture
-    drawPlayerAt (Coords i j) = translated x y (lettering "\x1F6B6")
+    drawPlayerAt (Coords i j) = translated x y (lettering ":D")
         where 
             x = fromIntegral i
             y = fromIntegral j
@@ -36,11 +39,11 @@ module EscapeTheRoom where
     buttonTile :: Color -> Picture
     buttonTile c = button c <> floorTile
 
-    doorTile :: Color -> DoorState -> Picture
-    doorTile c Closed = button c <> wallTile
-    doorTile c Opened = square c <> floorTile
-        where 
-            square color = colored color (thickRectangle 0.2 0.8 0.8)
+    doorTile :: Color -> Picture
+    doorTile c = button c <> wallTile
+--    doorTile c = square c <> floorTile
+--        where 
+--            square color = colored color (thickRectangle 0.2 0.8 0.8)
         
 
     exitTile :: Picture
@@ -50,7 +53,7 @@ module EscapeTheRoom where
     drawTile :: Tile -> Picture
     drawTile Wall = wallTile
     drawTile Floor = floorTile
-    drawTile (Door dc s) = doorTile (doorColor dc) s
+    drawTile (Door dc) = doorTile (doorColor dc)
     drawTile Exit = exitTile
     drawTile (Button dc) = buttonTile (doorColor dc)
 
@@ -69,52 +72,12 @@ module EscapeTheRoom where
     coordsByDir DirLeft (Coords x y) = Coords (x - 1) y
     coordsByDir DirRight (Coords x y) = Coords (x + 1) y
     coordsByDir DirAnother (Coords x y) = Coords x y
-
-
-    gameMap :: [[Tile]]
-                -- 0       1      2      3      4      5      6      7      8      9     10      11     12     13    14     15     16     17     18      19     20
-    gameMap =   [[Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall ], -- 0
-                [Wall , Floor, Wall , Button Main.Blue, Wall , Wall , Wall , Wall , Wall , Floor, Wall , Button Main.Red, Wall , Floor, Wall , Wall , Wall , Wall , Wall , Floor, Wall ], -- 1
-                [Wall , Floor, Wall , Floor, Wall , Wall , Wall , Wall , Wall , Floor, Wall , Floor, Wall , Floor, Wall , Wall , Wall , Wall , Wall , Floor, Wall ], -- 2
-                [Wall , Floor, Wall , Floor, Wall , Wall , Wall , Wall , Wall , Floor, Wall , Floor, Wall , Floor, Wall , Wall , Wall , Wall , Wall , Floor, Wall ], -- 3
-                [Wall , Floor, Wall , Floor, Floor, Floor, Wall , Floor, Floor, Floor, Door Main.Blue Closed, Door Main.Green Closed, Floor, Floor, Wall , Floor, Floor, Floor, Wall , Floor, Wall ], -- 4
-                [Wall , Floor, Wall , Floor, Wall , Floor, Wall , Floor, Wall , Wall , Wall , Wall , Wall , Floor, Wall , Floor, Wall , Floor, Wall , Floor, Wall ], -- 5
-                [Wall , Floor, Wall , Floor, Wall , Floor, Wall , Floor, Floor, Floor, Floor, Floor, Wall , Floor, Wall , Floor, Wall , Floor, Wall , Floor, Wall ], -- 6
-                [Wall , Floor, Wall , Wall , Wall , Floor, Wall , Wall , Wall , Wall , Wall , Floor, Wall , Floor, Wall , Wall , Wall , Floor, Wall , Floor, Wall ], -- 7
-                [Wall , Floor, Wall , Floor, Floor, Floor, Wall , Floor, Floor, Floor, Floor, Floor, Wall , Floor, Floor, Floor, Floor, Floor, Floor, Floor, Wall ], -- 8
-                [Wall , Floor, Wall , Floor, Wall , Wall , Wall , Floor, Wall , Wall , Wall , Wall , Wall , Wall , Wall , Floor, Wall , Wall , Floor, Wall , Wall ], -- 9
-                [Wall , Floor, Floor, Floor, Floor, Floor, Wall , Floor, Floor, Floor, Floor, Floor, Floor, Floor, Floor, Floor, Wall , Floor, Floor, Button Main.Green, Wall ], -- 10
-                [Wall , Floor, Wall , Floor, Wall , Floor, Wall , Floor, Wall , Floor, Wall , Wall , Wall , Wall , Wall , Door Main.Red Closed, Wall , Wall , Wall , Wall , Wall ], -- 11
-                [Wall , Floor, Wall , Floor, Wall , Floor, Door Main.Blue Closed, Floor, Wall , Floor, Wall , Floor, Floor, Floor, Wall , Floor, Floor, Floor, Floor, Floor, Wall ], -- 12
-                [Wall , Floor, Wall , Floor, Wall , Wall , Wall , Wall , Wall , Floor, Wall , Floor, Wall , Floor, Wall , Floor, Wall , Wall , Wall , Floor, Wall ], -- 13
-                [Wall , Floor, Wall , Floor, Wall , Floor, Floor, Floor, Floor, Floor, Floor, Floor, Wall , Floor, Wall , Floor, Wall , Floor, Floor, Floor, Wall ], -- 14
-                [Wall , Wall , Wall , Floor, Wall , Floor, Wall , Wall , Wall , Wall , Wall , Wall , Wall , Floor, Wall , Floor, Wall , Wall , Wall , Floor, Wall ], -- 15
-                [Wall , Floor, Floor, Floor, Wall , Floor, Floor, Floor, Floor, Floor, Floor, Floor, Wall , Floor, Wall , Floor, Floor, Floor, Floor, Floor, Wall ], -- 16 
-                [Wall , Floor, Wall , Floor, Wall , Wall , Wall , Wall , Wall , Floor, Wall , Wall , Wall , Floor, Wall , Wall , Wall , Wall , Wall , Door Main.Green Closed, Wall ], -- 17
-                [Wall , Floor, Wall , Floor, Wall , Wall , Wall , Wall , Wall , Floor, Wall , Button Main.Blue, Wall , Floor, Wall , Wall , Wall , Wall , Wall , Exit , Wall ], -- 18
-                [Wall , Floor, Wall , Floor, Wall , Wall , Wall , Wall , Wall , Floor, Floor, Floor, Wall , Floor, Wall , Wall , Wall , Wall , Wall , Floor, Wall ], -- 19
-                [Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall , Wall ]] -- 20
-
-    initialWorld :: Level
-    initialWorld = Level (Coords 1 1) tileByCoords
-
-    updateWorld :: Double -> Level -> Level
-    updateWorld _ lvl = lvl
-
-    drawWorld:: Level -> Picture
-    drawWorld (Level c f) = scaled (0.75) (0.75) (
-            translated x y (drawPlayerAt c <> drawLevelMap f))
-        where
-            sizeX = 21 -- later would be easier to change map size
-            sizeY = 21
-            x = - sizeX / 2
-            y = - sizeY / 2
         
     -- | A level is a tile map together with character's initial location.
-    data Level = Level Coords (Coords -> Tile)
+--    data Level = Level Coords (Coords -> Tile)
 
-    tileByCoords :: Coords -> Tile
-    tileByCoords (Coords i j) = gameMap !! (fromIntegral j) !! (fromIntegral i)
+--    tileByCoords :: Coords -> Tile
+--    tileByCoords (Coords i j) = gameMap !! (fromIntegral j) !! (fromIntegral i)
 
     -- | Try move character in a given direction.
     tryMove :: Dir -> Level -> Level
@@ -126,8 +89,8 @@ module EscapeTheRoom where
     canMove :: Tile -> Bool
     canMove Wall = False
     canMove Floor = True
-    canMove (Door _ Closed) = False
-    canMove (Door _ Opened) = True
+    canMove (Door _) = False
+ --   canMove (Door _ Opened) = True
     canMove Exit = True
     canMove (Button _) = True
 
@@ -138,12 +101,12 @@ module EscapeTheRoom where
             applyF :: Coords -> Picture
             applyF (Coords i j) = translated x y (drawTile (tileF (Coords i j)))
                 where
-                    x = fromInteger i
-                    y = fromInteger j
+                    x = fromIntegral i
+                    y = fromIntegral j
         
 
     -- | map function applied to the whole gameMap
-    --mapThroughMap :: (Coords -> Smth) -> Smth
+    mapThroughMap :: (Coords -> a) -> [[a]]
     mapThroughMap func = iterateWith (\y -> iterateRow func maxX y) maxY
         where
             maxX = 21 - 1 -- later would be easier to change map size
@@ -160,7 +123,7 @@ module EscapeTheRoom where
                     mapCell x = cellF (Coords x j)
         
 
-    --reduce :: [_] -> _acc -> (_acc -> _ -> _acc) -> _acc
+    reduce :: [a] -> _acc -> (_acc -> a -> _acc) -> _acc
     reduce [] acc _ = acc
     reduce (x:xs) acc f = f (reduce xs acc f) x
 
@@ -169,9 +132,9 @@ module EscapeTheRoom where
         
 
     eqDoorColor :: DoorColor -> DoorColor -> Bool
-    eqDoorColor Main.Red Main.Red = True
-    eqDoorColor Main.Blue Main.Blue = True
-    eqDoorColor Main.Green Main.Green = True
+    eqDoorColor CRed CRed = True
+    eqDoorColor CBlue CBlue = True
+    eqDoorColor CGreen CGreen = True
     eqDoorColor _c1 _c2 = False
 
     oneOf :: DoorColor -> [DoorColor] -> Bool
@@ -189,18 +152,19 @@ module EscapeTheRoom where
                 | otherwise = f
                 where
                 isDoor :: Tile -> Bool
-                isDoor (Door _ _) = True
+                isDoor (Door _) = True
                 isDoor _ = False
         --          getDoorColor :: (Door DoorColor DoorState) -> DoorColor
-                getDoorColor (Door col _) = col
+                getDoorColor (Door col) = col
+                getDoorColor _ = CRed
                 getNewMap :: Coords -> Coords -> Tile
                 getNewMap doorCoord checkCoord
-                    | eqCoords doorCoord checkCoord = invertState (cMap doorCoord)
+                    | eqCoords doorCoord checkCoord = Floor
                     | otherwise = f checkCoord
-                invertState :: Tile -> Tile
-                invertState (Door color Opened) = Door color Closed
-                invertState (Door color Closed) = Door color Opened
-                invertState t = t
+--                invertState :: Tile -> Tile
+--                invertState (Door color Opened) = Door color Closed
+--                invertState (Door color Closed) = Door color Opened
+--                invertState t = t
             
     handleWorld :: Event -> Level -> Level
     handleWorld (KeyPress key) l = checkF (tryMove (stringToDir (unpack key)) l)
@@ -220,6 +184,62 @@ module EscapeTheRoom where
                     getColors (Button c') = [c']
                     getColors _ = []
     handleWorld _ l = l
+
+    data Status = Prepare | Play | Win
+
+    data State = State [Level] Status [(Coords, DoorColor)]
+
+ --   initLevelMap :: Level -> State
+ --   initLevelMap l = State l Prepare
+
+    isLevelComplete :: State -> Bool
+    isLevelComplete (State (l:_) _ _) 
+        | isExit (getTile l) = True
+        | otherwise = False
+            where
+                getTile (Level c f) = f c
+                isExit :: Tile -> Bool
+                isExit Exit = True
+                isExit _ = False
+    isLevelComplete _ = True           
+                
+    solution5 :: IO ()
+    solution5 = interactionOf initialWorld5 updateWorld5 handleWorld5 drawWorld5
+        where
+            initialWorld5 :: State
+            initialWorld5 = State levels Prepare []
+            updateWorld5 :: Double -> State -> State
+            updateWorld5 _ w = w
+            handleWorld5 :: Event -> State -> State
+            handleWorld5 (KeyPress key) (State (l:ls) s ds) = State (newLvl:ls) s ds
+                where
+                    checkF (Level c f)
+                        | isButton (f c) = Level c (openDoors4 (getColors (f c)) f)
+                        | isExit (f c) = Level (Coords 100 100) f
+                        | otherwise = Level c f
+                        where
+                            isButton :: Tile -> Bool
+                            isButton (Button _) = True
+                            isButton _ = False
+                            isExit :: Tile -> Bool
+                            isExit Exit = True
+                            isExit _ = False
+                            getColors :: Tile -> [DoorColor]
+                            getColors (Button c') = [c']
+                            getColors _ = []
+                    newLvl = checkF (tryMove (stringToDir (unpack key)) l)
+            handleWorld5 _ s = s
+            drawWorld5 :: State -> Picture
+            drawWorld5 (State ((Level c f):_) _ _) = scaled (0.75) (0.75) (
+                translated x y (drawPlayerAt c <> drawLevelMap f))
+                where
+                    sizeX = 21 -- later would be easier to change map size
+                    sizeY = 21
+                    x = - sizeX / 2
+                    y = - sizeY / 2
+            drawWorld5 _ = blank
     
-    main :: IO ()
-    main = interactionOf initialWorld updateWorld handleWorld drawWorld
+    run :: IO ()
+    run = solution5
+    
+    

@@ -289,7 +289,7 @@ module EscapeTheRoom.Levels where
         parseLevel rows = Level (Coords playerX playerY) (\(Coords x y) -> tiles !! y !! x)
           where
             sizeX = length $ head rows
-            sizeY = length rows
+ --           sizeY = length rows
     
             playerY = case (findIndex (elem '@') rows) of
               Nothing -> error "player position not specified"
